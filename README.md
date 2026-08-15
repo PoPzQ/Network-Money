@@ -70,6 +70,7 @@ You also get additional rewards!
 | Go to [EARNFM](https://earn.fm/ref/MAXMRBKU)  | :white_check_mark:	  | :x: |Unlimited|1|
 | Go to [PROXYRACK](https://peer.proxyrack.com/ref/q1lweh1tct3inae20vyy1wbcm7kxhrum7bkg523h)  | :white_check_mark:	  | :white_check_mark: |500|1|
 | Go to [PROXYLITE](https://proxylite.ru/?r=EUAIEUDA) | :white_check_mark:	  | :white_check_mark: |Unlimited|1|
+| Go to [PROXYBASE](https://proxybase.xyz?referral=nXzS3c6iTO) | :x: | :white_check_mark: | Unlimited | 1 |
 | Go to [SPEEDSHARE](https://speedshare.app/?ref=popzq) | :white_check_mark: | :x: | Unlimited | 1 |
 | Go to [GRASS](https://app.getgrass.io/register/?referralCode=QUwDE_CVNiQoh0M) | :white_check_mark: | :x: | Unlimited | 1 |
 | Go to [MYSTNODE](https://mystnodes.co/?referral_code=6x3sg4ntaXBDezHpPi8pO7wnd5BtEuKwR6D6rHA7) | :white_check_mark:	  | :white_check_mark: |Unlimited|Unlimited|

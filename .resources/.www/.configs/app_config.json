@@ -113,8 +113,14 @@
       "--email":{},
       "--password":{}
   }
-}
-  
+},
+  {
+    "name": "PROXYBASE",
+    "dashboard": "https://proxybase.xyz",
+    "link": "https://proxybase.xyz?referral=nXzS3c6iTO",
+    "image": "ghcr.io/proxybasehq/proxybase-cli",
+    "flags": {}
+  }
   ],
   "extra-apps":[
     {
