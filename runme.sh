@@ -1130,24 +1130,28 @@ fn_setupApp() {
                     # App Docker image architecture adjustments
                     toLog_ifDebug -l "[DEBUG]" -m "Starting Docker image architecture adjustments for ${CURRENT_APP} app"
                     TAG=$(grep -oP "\s*image: ${app_image}:\K[^\s#]+" $DKCOM_FILENAME)
-                    DKHUBRES=$(curl -L -s "https://registry.hub.docker.com/v2/repositories/${app_image}/tags" | jq --arg DKARCH "$DKARCH" '[.results[] | select(.images[].architecture == $DKARCH) | .name]')
-                    TAGSNUMBER=$(echo "$DKHUBRES" | jq '. | length')
-                    if [ "$TAGSNUMBER" -gt 0 ]; then 
-                        colorprint "DEFAULT" "There are $TAGSNUMBER tags supporting $DKARCH arch for this image"
-                        colorprint "DEFAULT" "Let's see if $TAG tag is in there"
-                        LATESTPRESENT=$(echo "$DKHUBRES" | jq --arg TAG "$TAG" '[.[] | contains($TAG)] | any')
-                        if [ "$LATESTPRESENT" == "true" ]; then 
-                            colorprint "GREEN" "OK, $TAG tag present and it supports $DKARCH arch, nothing to do"
-                        else 
-                            colorprint "YELLOW" "$TAG tag does not support $DKARCH arch but other tags do, the newer tag supporting $DKARCH will be selected"
-                            NEWTAG=$(echo "$DKHUBRES" | jq -r '.[0]')
-                            sed -i "s^${app_image}:${TAG}^${app_image}:$NEWTAG^" $DKCOM_FILENAME
+                    if [[ "$app_image" =~ ^[A-Za-z0-9-]+\.[A-Za-z0-9-]+/ ]]; then
+                        colorprint "GREEN" "OK, $app_image is hosted on an external registry (e.g. GHCR), skipping the Docker Hub architecture check"
+                    else
+                        DKHUBRES=$(curl -L -s "https://registry.hub.docker.com/v2/repositories/${app_image}/tags" | jq --arg DKARCH "$DKARCH" '[.results[] | select(.images[].architecture == $DKARCH) | .name]')
+                        TAGSNUMBER=$(echo "$DKHUBRES" | jq '. | length')
+                        if [ "$TAGSNUMBER" -gt 0 ]; then
+                            colorprint "DEFAULT" "There are $TAGSNUMBER tags supporting $DKARCH arch for this image"
+                            colorprint "DEFAULT" "Let's see if $TAG tag is in there"
+                            LATESTPRESENT=$(echo "$DKHUBRES" | jq --arg TAG "$TAG" '[.[] | contains($TAG)] | any')
+                            if [ "$LATESTPRESENT" == "true" ]; then
+                                colorprint "GREEN" "OK, $TAG tag present and it supports $DKARCH arch, nothing to do"
+                            else
+                                colorprint "YELLOW" "$TAG tag does not support $DKARCH arch but other tags do, the newer tag supporting $DKARCH will be selected"
+                                NEWTAG=$(echo "$DKHUBRES" | jq -r '.[0]')
+                                sed -i "s^${app_image}:${TAG}^${app_image}:$NEWTAG^" $DKCOM_FILENAME
+                            fi
+                        else
+                            colorprint "YELLOW" "No native image tag found for $DKARCH arch, emulation layer will try to run this app image anyway."
+                            colorprint "DEFAULT" "If an emulation layer is not already installed, the script will try to install it now. Please provide your sudo password if prompted."
+                            #fn_install_packages qemu binfmt-support qemu-user-static
+                            fn_addDockerBinfmtSVC
                         fi
-                    else 
-                        colorprint "YELLOW" "No native image tag found for $DKARCH arch, emulation layer will try to run this app image anyway."
-                        colorprint "DEFAULT" "If an emulation layer is not already installed, the script will try to install it now. Please provide your sudo password if prompted."
-                        #fn_install_packages qemu binfmt-support qemu-user-static
-                        fn_addDockerBinfmtSVC
                     fi
                     local currentTag=$(grep -oP "${app_image}:\K[^#\r]+" $DKCOM_FILENAME)
                     toLog_ifDebug -l "[DEBUG]" -m "Finished Docker image architecture adjustments for ${CURRENT_APP} app. Its image tag is now: $currentTag"

@@ -1164,46 +1164,51 @@ function fn_setupApp() {
                 # Complete the setup of the app by enabling it in the docker-compose file
                 (Get-Content $dk_compose_filename) -replace "#ENABLE_${CURRENT_APP}", "" | Set-Content $dk_compose_filename
                 toLog_ifDebug -l "[DEBUG]" -m "Enabled ${CURRENT_APP} in $dk_compose_filename"
-                # App Docker image architecture adjustments                
+                # App Docker image architecture adjustments
                 $TAG = Get-Content $dk_compose_filename | Select-String -Pattern "\s*image: ${APP_IMAGE}:(\S+)" | ForEach-Object { $_.Matches[0].Groups[1].Value } | Select-Object -First 1
-                        
-                # Ensure $supported_tags is an array
-                $supported_tags = @()
-                        
-                # Send a request to DockerHub for a list of tags
-                $page_index = 1
-                $page_size = 500
-                $ProgressPreference = 'SilentlyContinue'
-                $json = Invoke-WebRequest -Uri "https://registry.hub.docker.com/v2/repositories/${APP_IMAGE}/tags?page=${page_index}&page_size=${page_size}" -UseBasicParsing | ConvertFrom-Json
-                $ProgressPreference = 'Continue'
-                        
-                # Filter out the tags that do not support the specified architecture
-                $json.results | ForEach-Object {
-                    $ntag = $_.name
-                    if (($_.images | Where-Object { $_.architecture -eq $DKARCH })) {
-                        $supported_tags += $ntag
-                    }
-                }
-            
-                # Check if there are any tags that support the given architecture
-                if ($supported_tags) {
-                    colorprint "default" "There are $($supported_tags.Count) tags supporting $DKARCH arch for this image"
-                    colorprint "default" "Let's see if $TAG tag is in there"
-                    
-                    # Check if 'latest' tag is among them
-                    if ($supported_tags -contains $TAG) {
-                        colorprint "green" "OK, $TAG tag present and it supports $DKARCH arch, nothing to do"
-                    }
-                    else {
-                        colorprint "yellow" "$TAG tag does not support $DKARCH arch but other tags do, the newer tag supporting $DKARCH will be selected"
-                        # Replace 'latest' tag with the first one that supports the given architecture in your Docker compose file
-                        $newTag = $supported_tags[0]
-                    (Get-Content $dk_compose_filename).replace("${APP_IMAGE}:$TAG", "${APP_IMAGE}:$newTag") | Set-Content $DKCOM_FILENAME
-                    }
+
+                if ($APP_IMAGE -match '^[A-Za-z0-9-]+\.[A-Za-z0-9-]+/') {
+                    colorprint "green" "OK, $APP_IMAGE is hosted on an external registry (e.g. GHCR), skipping the Docker Hub architecture check"
                 }
                 else {
-                    colorprint "yellow" "No native image tag found for $DKARCH arch, emulation layer will try to run this app image anyway."
-                    #colorprint "default" "If an emulation layer is not already installed, the script will try to install it now. Please provide your sudo password if prompted."
+                    # Ensure $supported_tags is an array
+                    $supported_tags = @()
+
+                    # Send a request to DockerHub for a list of tags
+                    $page_index = 1
+                    $page_size = 500
+                    $ProgressPreference = 'SilentlyContinue'
+                    $json = Invoke-WebRequest -Uri "https://registry.hub.docker.com/v2/repositories/${APP_IMAGE}/tags?page=${page_index}&page_size=${page_size}" -UseBasicParsing | ConvertFrom-Json
+                    $ProgressPreference = 'Continue'
+
+                    # Filter out the tags that do not support the specified architecture
+                    $json.results | ForEach-Object {
+                        $ntag = $_.name
+                        if (($_.images | Where-Object { $_.architecture -eq $DKARCH })) {
+                            $supported_tags += $ntag
+                        }
+                    }
+
+                    # Check if there are any tags that support the given architecture
+                    if ($supported_tags) {
+                        colorprint "default" "There are $($supported_tags.Count) tags supporting $DKARCH arch for this image"
+                        colorprint "default" "Let's see if $TAG tag is in there"
+
+                        # Check if 'latest' tag is among them
+                        if ($supported_tags -contains $TAG) {
+                            colorprint "green" "OK, $TAG tag present and it supports $DKARCH arch, nothing to do"
+                        }
+                        else {
+                            colorprint "yellow" "$TAG tag does not support $DKARCH arch but other tags do, the newer tag supporting $DKARCH will be selected"
+                            # Replace 'latest' tag with the first one that supports the given architecture in your Docker compose file
+                            $newTag = $supported_tags[0]
+                        (Get-Content $dk_compose_filename).replace("${APP_IMAGE}:$TAG", "${APP_IMAGE}:$newTag") | Set-Content $DKCOM_FILENAME
+                        }
+                    }
+                    else {
+                        colorprint "yellow" "No native image tag found for $DKARCH arch, emulation layer will try to run this app image anyway."
+                        #colorprint "default" "If an emulation layer is not already installed, the script will try to install it now. Please provide your sudo password if prompted."
+                    }
                 }
                 $currentTag = Get-Content $dk_compose_filename | Select-String -Pattern "\s*image: ${APP_IMAGE}:(\S+)" | ForEach-Object { $_.Matches[0].Groups[1].Value } | Select-Object -First 1
                 toLog_ifDebug -l "[DEBUG]" -m "Finished Docker image architecture adjustments for ${CURRENT_APP} app. Its image tag is now: $currentTag"

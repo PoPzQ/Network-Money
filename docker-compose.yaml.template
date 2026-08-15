@@ -181,6 +181,18 @@ services:
 #ENABLE_GRASS    mem_reservation: ${APP_MEM_RESERV_BIG}
 #ENABLE_GRASS    mem_limit: ${APP_MEM_LIMIT_BIG}
 
+# PROXYBASE MARKETS CONTAINER
+#ENABLE_PROXYBASE  proxybase:
+#ENABLE_PROXYBASE    container_name: ${DEVICE_NAME}_proxybase
+#ENABLE_PROXYBASE    hostname: ${DEVICE_NAME}_proxybase
+#ENABLE_PROXYBASE    image: ghcr.io/proxybasehq/proxybase-cli:latest
+#ENABLE_PROXYBASE    volumes:
+#ENABLE_PROXYBASE      - proxybase-data:/home/proxybase/.proxybase
+#ENABLE_PROXYBASE    restart: always
+#ENABLE_PROXYBASE    cpus: ${APP_CPU_LIMIT_LITTLE}
+#ENABLE_PROXYBASE    mem_reservation: ${APP_MEM_RESERV_LITTLE}
+#ENABLE_PROXYBASE    mem_limit: ${APP_MEM_LIMIT_LITTLE}
+
 
 ### EXTRA APPS ###
 
@@ -287,5 +299,6 @@ services:
         
 volumes:
   earnapp-data:
+  proxybase-data:
   #bitping-data: # uncomment this if in bitping volumes you choose to use docker volumes instead of binding an host folder
   #myst-data: # uncomment this if in myst volumes you choose to use docker volumes instead of binding an host folder
